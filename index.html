@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Market Watch">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0a0a'/%3E%3Ctext x='50' y='68' font-size='60' font-family='monospace' font-weight='bold' text-anchor='middle' fill='%23facc15'%3E$%3C/text%3E%3C/svg%3E">
+<title>Market Watch v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-2: #1c1c1c;
+    --surface-3: #242424;
+    --border: #262626;
+    --border-bright: #3a3a3a;
+    --text: #f5f5f4;
+    --text-dim: #a8a29e;
+    --text-faint: #57534e;
+    --up: #4ade80;
+    --up-bg: rgba(74, 222, 128, 0.12);
+    --down: #f87171;
+    --down-bg: rgba(248, 113, 113, 0.12);
+    --accent: #facc15;
+    --accent-blue: #60a5fa;
+    --accent-purple: #c084fc;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Familjen Grotesk', system-ui, sans-serif;
+    font-size: 15px; line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: contain;
+  }
+  body { padding-top: var(--safe-top); padding-bottom: var(--safe-bot); min-height: 100vh; }
+  .mono { font-family: 'Azeret Mono', monospace; font-feature-settings: 'tnum'; }
+
+  /* HEADER */
+  header {
+    position: sticky; top: var(--safe-top); z-index: 10;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    padding: 14px 16px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .brand h1 {
+    font-size: 16px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .brand .v { font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; margin-left: 2px; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-dim); }
+  .status .ts { font-family: 'Azeret Mono', monospace; letter-spacing: 0.04em; }
+  button.icon {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+    font-size: 16px; display: grid; place-items: center;
+    transition: background 0.15s, transform 0.15s; padding: 0;
+    font-family: inherit;
+  }
+  button.icon:active { transform: scale(0.92); background: var(--surface-2); }
+  button.icon.spinning { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TABS */
+  nav.tabs {
+    display: flex; gap: 4px; padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; position: sticky; top: calc(var(--safe-top) + 56px); z-index: 9;
+    background: var(--bg);
+  }
+  nav.tabs::-webkit-scrollbar { display: none; }
+  nav.tabs button {
+    background: transparent; border: 1px solid transparent; color: var(--text-dim);
+    padding: 7px 14px; border-radius: 999px; cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    white-space: nowrap; letter-spacing: 0.02em;
+    transition: all 0.15s;
+  }
+  nav.tabs button.active {
+    background: var(--text); color: var(--bg); border-color: var(--text);
+    font-weight: 600;
+  }
+  nav.tabs button:not(.active):active { background: var(--surface); }
+
+  /* SUB-TABS (inside News etc.) */
+  .subtabs {
+    display: flex; gap: 4px; margin: 4px 4px 14px;
+    background: var(--surface); padding: 4px; border-radius: 10px; border: 1px solid var(--border);
+  }
+  .subtabs button {
+    flex: 1; background: transparent; border: none; color: var(--text-dim);
+    padding: 8px 10px; border-radius: 7px; cursor: pointer;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    transition: all 0.15s;
+  }
+  .subtabs button.active { background: var(--surface-3); color: var(--text); }
+
+  main { padding: 14px 14px 80px; }
+  section[hidden], .sub-pane[hidden] { display: none; }
+
+  .section-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-faint); margin: 20px 4px 10px;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  }
+  .section-title:first-child { margin-top: 4px; }
+  .section-title .meta { font-family: 'Azeret Mono', monospace; font-weight: 400; letter-spacing: 0.04em; font-size: 10px; }
+  .section-title .actions { display: flex; gap: 6px; align-items: center; }
+  .mini-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 4px 9px; border-radius: 6px; font-family: inherit; font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 600;
+  }
+  .mini-btn:active { background: var(--surface-2); }
+  .mini-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  /* BANNER */
+  .banner {
+    background: linear-gradient(135deg, rgba(250,204,21,0.08), rgba(250,204,21,0.02));
+    border: 1px solid rgba(250,204,21,0.3); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 12px; font-size: 13px; color: var(--text-dim);
+  }
+  .banner strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .banner code { font-family: 'Azeret Mono', monospace; font-size: 12px; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px; color: var(--text); }
+
+  /* INDEX STRIP */
+  .indexes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .index-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .index-card .sym { font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; font-weight: 600; }
+  .index-card .price { font-family: 'Azeret Mono', monospace; font-size: 18px; font-weight: 500; }
+  .index-card .chg { font-family: 'Azeret Mono', monospace; font-size: 12px; }
+
+  /* HEAT MAP */
+  .heatmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .heat-tile {
+    aspect-ratio: 1.1 / 1; border-radius: 10px; padding: 10px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border: 1px solid var(--border); background: var(--surface);
+    transition: transform 0.15s; position: relative; cursor: pointer;
+  }
+  .heat-tile:active { transform: scale(0.97); }
+  .heat-tile .sym { font-size: 13px; font-weight: 700; letter-spacing: 0.04em; }
+  .heat-tile .name { font-size: 9px; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.2; }
+  .heat-tile .pct { font-family: 'Azeret Mono', monospace; font-size: 15px; font-weight: 500; }
+  .heat-tile .remove-btn {
+    position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+    background: var(--down-bg); border: 1px solid var(--down); color: var(--down);
+    border-radius: 50%; font-size: 12px; display: none; place-items: center; cursor: pointer;
+    line-height: 1;
+  }
+  body.editing-heatmap .heat-tile .remove-btn { display: grid; }
+  .heat-add-tile {
+    aspect-ratio: 1.1 / 1; border-radius: 10px; border: 1.5px dashed var(--border-bright);
+    background: transparent; color: var(--text-dim); cursor: pointer;
+    display: none; align-items: center; justify-content: center; font-size: 22px;
+  }
+  body.editing-heatmap .heat-add-tile { display: flex; }
+
+  /* MACRO STRIP */
+  .macro-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .macro-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .macro-card .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .macro-card .label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .macro-card .val { font-family: 'Azeret Mono', monospace; font-size: 16px; font-weight: 500; }
+  .macro-card .chg { font-family: 'Azeret Mono', monospace; font-size: 11px; }
+  .macro-card svg { width: 100%; height: 36px; display: block; }
+
+  /* WATCHLIST */
+  .watchlist {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-bottom: 14px;
+  }
+  .watch-row {
+    display: grid; grid-template-columns: 1fr auto auto auto;
+    gap: 10px; padding: 12px 14px; align-items: center;
+    border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .watch-row:last-child { border-bottom: none; }
+  .watch-row:active { background: var(--surface-2); }
+  .watch-row .left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .watch-row .ticker { font-weight: 700; font-size: 14px; letter-spacing: 0.04em; }
+  .watch-row .name { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+  .watch-row .price { font-family: 'Azeret Mono', monospace; font-size: 14px; text-align: right; min-width: 70px; }
+  .watch-row .chg {
+    font-family: 'Azeret Mono', monospace; font-size: 12px; font-weight: 500;
+    padding: 4px 8px; border-radius: 6px; min-width: 64px; text-align: right;
+  }
+  .watch-row .remove {
+    background: var(--down-bg); color: var(--down); border: none; border-radius: 6px;
+    width: 24px; height: 24px; display: none; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; line-height: 1; font-family: inherit;
+  }
+  .mini-btn.del-group { display: none; }
+  body.editing-watchlist .mini-btn.del-group { display: inline-block; }
+  body.editing-watchlist .watch-row .remove { display: flex; }
+  body.editing-watchlist .watch-row .chg { display: none; }
+
+  .add-row {
+    padding: 12px 14px; display: none; gap: 8px; background: var(--surface-2);
+    border-top: 1px solid var(--border);
+  }
+  body.editing-watchlist .add-row { display: flex; }
+  .add-row input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; border-radius: 6px; font-family: 'Azeret Mono', monospace; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .add-row input:focus { outline: 1px solid var(--accent); }
+  .add-row button {
+    background: var(--accent); color: var(--bg); border: none; border-radius: 6px;
+    padding: 0 16px; font-family: inherit; font-weight: 700; font-size: 12px;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  }
+
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .chg.up { background: var(--up-bg); }
+  .chg.down { background: var(--down-bg); }
+
+  /* NEWS */
+  .news-list { display: flex; flex-direction: column; gap: 8px; }
+  .news-item {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; text-decoration: none; color: inherit; display: block;
+    transition: border-color 0.15s;
+  }
+  .news-item:active { border-color: var(--border-bright); }
+  .news-item .meta { font-size: 10px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .news-item .src { display: flex; gap: 6px; align-items: center; }
+  .news-item .tag {
+    padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; background: var(--surface-3); color: var(--text);
+  }
+  .news-item .tag.markets { background: rgba(96, 165, 250, 0.18); color: var(--accent-blue); }
+  .news-item .tag.reddit { background: rgba(250, 100, 50, 0.18); color: #fb923c; }
+  .news-item .tag.geopolitics { background: rgba(248, 113, 113, 0.18); color: var(--down); }
+  .news-item .tag.crypto { background: rgba(250, 204, 21, 0.18); color: var(--accent); }
+  .news-item .tag.merger { background: rgba(192, 132, 252, 0.18); color: var(--accent-purple); }
+  .news-item .headline { font-size: 14px; font-weight: 500; line-height: 1.35; }
+  .news-item .summary { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-item .reddit-meta { font-size: 11px; color: var(--text-dim); margin-top: 6px; font-family: 'Azeret Mono', monospace; }
+
+  /* POLYMARKET */
+  .poly-item {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; margin-bottom: 8px; text-decoration: none; color: inherit; display: block;
+  }
+  .poly-item .q { font-size: 13px; font-weight: 500; margin-bottom: 10px; line-height: 1.35; }
+  .poly-item .outcomes { display: flex; flex-direction: column; gap: 6px; }
+  .poly-outcome { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .poly-outcome .nm { color: var(--text-dim); }
+  .poly-outcome .bar {
+    flex: 1; height: 6px; background: var(--surface-3); margin: 0 10px; border-radius: 3px; overflow: hidden;
+  }
+  .poly-outcome .fill { height: 100%; background: var(--accent-blue); border-radius: 3px; transition: width 0.4s; }
+  .poly-outcome .pct { font-family: 'Azeret Mono', monospace; font-weight: 600; min-width: 38px; text-align: right; }
+  .poly-item .vol { font-size: 10px; color: var(--text-faint); margin-top: 8px; letter-spacing: 0.05em; font-family: 'Azeret Mono', monospace; }
+
+  /* CALENDAR */
+  .cal-day { margin-bottom: 18px; }
+  .cal-day-header {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;
+  }
+  .cal-day-header .count { color: var(--text-faint); font-family: 'Azeret Mono', monospace; font-weight: 400; }
+  .cal-item {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 6px;
+    display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+  }
+  .cal-item .info { min-width: 0; }
+  .cal-item .ticker { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; }
+  .cal-item .when {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+    padding: 3px 7px; border-radius: 4px; display: inline-block; margin-left: 6px;
+  }
+  .when.bmo { background: rgba(96, 165, 250, 0.18); color: var(--accent-blue); }
+  .when.amc { background: rgba(192, 132, 252, 0.18); color: var(--accent-purple); }
+  .when.dmh { background: rgba(250, 204, 21, 0.18); color: var(--accent); }
+  .when.unk { background: var(--surface-3); color: var(--text-dim); }
+  .cal-item .est { font-family: 'Azeret Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .cal-item .eps { text-align: right; }
+  .cal-item .eps-lbl { font-size: 9px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase; }
+  .cal-item .eps-val { font-family: 'Azeret Mono', monospace; font-size: 13px; }
+
+  /* RESEARCH */
+  .search-bar {
+    display: flex; gap: 8px; margin-bottom: 14px;
+  }
+  .search-bar input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 14px; border-radius: 10px; font-family: 'Azeret Mono', monospace; font-size: 15px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .search-bar input:focus { outline: 1px solid var(--accent); }
+  .search-bar button {
+    background: var(--accent); color: var(--bg); border: none; border-radius: 10px;
+    padding: 0 18px; font-family: inherit; font-weight: 700; font-size: 12px;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  }
+
+  .r-block { margin-bottom: 14px; }
+  .r-head {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px;
+  }
+  .r-head .tick { font-size: 22px; font-weight: 700; letter-spacing: 0.04em; }
+  .r-head .nm { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+  .r-head .px { font-family: 'Azeret Mono', monospace; font-size: 24px; font-weight: 500; }
+  .r-head .ch { font-family: 'Azeret Mono', monospace; font-size: 13px; margin-top: 2px; }
+  .r-stats {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px;
+  }
+  .r-stat {
+    background: var(--surface-2); border-radius: 8px; padding: 8px 10px;
+  }
+  .r-stat .l { font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .r-stat .v { font-family: 'Azeret Mono', monospace; font-size: 13px; margin-top: 2px; }
+
+  .range-bar { margin: 12px 0; }
+  .range-bar .l { font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .range-bar .track {
+    position: relative; height: 6px; background: linear-gradient(to right, var(--down-bg), var(--surface-3), var(--up-bg));
+    border-radius: 3px;
+  }
+  .range-bar .marker {
+    position: absolute; top: -3px; width: 4px; height: 12px; background: var(--text); border-radius: 1px;
+    transform: translateX(-50%);
+  }
+  .range-bar .ends { display: flex; justify-content: space-between; margin-top: 6px; font-family: 'Azeret Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+  .recos { display: flex; gap: 4px; height: 14px; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .recos > div { display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+  .reco-buy { background: var(--up); color: #052e16; }
+  .reco-hold { background: var(--accent); color: #422006; }
+  .reco-sell { background: var(--down); color: #450a0a; }
+  .reco-legend { display: flex; gap: 12px; font-size: 10px; color: var(--text-dim); margin-top: 6px; letter-spacing: 0.06em; }
+  .reco-legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+  .reco-legend .b::before { background: var(--up); }
+  .reco-legend .h::before { background: var(--accent); }
+  .reco-legend .s::before { background: var(--down); }
+
+  .obs-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .obs-list li {
+    background: var(--surface-2); padding: 10px 12px; border-radius: 8px;
+    font-size: 13px; line-height: 1.4; border-left: 2px solid var(--accent);
+  }
+  .obs-list li.up { border-left-color: var(--up); }
+  .obs-list li.down { border-left-color: var(--down); }
+
+  .disclaimer {
+    font-size: 10px; color: var(--text-faint); padding: 12px; text-align: center;
+    line-height: 1.5; border: 1px dashed var(--border); border-radius: 8px; margin-top: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  /* SETTINGS MODAL */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100;
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: fadein 0.2s ease;
+  }
+  /* `display: flex` above is an author rule, so it beats the browser's
+     built-in [hidden] { display: none } — without this the settings sheet
+     stays mounted over the whole app and closeSettings() has no effect,
+     leaving every tab and button untappable behind the backdrop. */
+  .modal-backdrop[hidden] { display: none; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--surface); width: 100%; max-width: 600px;
+    border-radius: 16px 16px 0 0; padding: 18px;
+    padding-bottom: calc(18px + var(--safe-bot));
+    max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); border-bottom: none;
+    animation: slideup 0.25s ease;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal h2 { font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .modal h2 button { background: transparent; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; line-height: 1; padding: 0; font-family: inherit; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+  .field input, .field textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; border-radius: 8px; font-family: 'Azeret Mono', monospace; font-size: 13px;
+  }
+  .field input:focus, .field textarea:focus { outline: 1px solid var(--accent); }
+  .field .hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; line-height: 1.4; }
+  .field .hint a { color: var(--accent-blue); }
+  .field textarea { min-height: 70px; resize: vertical; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .modal-actions button { flex: 1; padding: 12px; border-radius: 10px; font-family: inherit; font-weight: 600; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border: none; }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border) !important; }
+
+  /* LOADING / EMPTY */
+  .skel { background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; border-radius: 12px; height: 60px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .empty { color: var(--text-faint); font-size: 12px; text-align: center; padding: 24px; font-style: italic; }
+  .empty code { font-style: normal; color: var(--text-dim); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  /* DATA HEALTH */
+  .health-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .health-row { display: flex; align-items: baseline; gap: 8px; background: var(--surface-2); padding: 8px 10px; font-size: 11px; }
+  .health-row .nm { font-weight: 600; min-width: 74px; }
+  .health-row .st { font-family: 'Azeret Mono', monospace; font-size: 10px; padding: 1px 6px; border-radius: 4px; }
+  .health-row .st.ok { background: var(--up-bg); color: var(--up); }
+  .health-row .st.bad { background: var(--down-bg); color: var(--down); }
+  .health-row .st.warn { background: rgba(250, 204, 21, 0.14); color: var(--accent); }
+  .health-row .st.idle { background: var(--surface-3); color: var(--text-faint); }
+  .health-row .note { color: var(--text-dim); flex: 1; line-height: 1.35; }
+
+  /* CALENDAR EXTRAS */
+  .cal-day.today .cal-day-header { color: var(--accent); }
+  .cal-item .actual { color: var(--text-dim); font-size: 10px; }
+  .mini-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>Market Watch</h1>
+    <span class="v">v2</span>
+  </div>
+  <div class="status">
+    <span class="ts" id="last-updated">—</span>
+    <button class="icon" id="refresh" aria-label="Refresh">↻</button>
+    <button class="icon" id="settings-open" aria-label="Settings">⚙</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="overview" class="active">Overview</button>
+  <button data-tab="lists">Lists</button>
+  <button data-tab="news">News</button>
+  <button data-tab="calendar">Calendar</button>
+  <button data-tab="research">Research</button>
+</nav>
+
+<main>
+  <!-- OVERVIEW -->
+  <section id="tab-overview">
+    <div id="key-banner"></div>
+
+    <div class="section-title">Major Indexes <span class="meta" id="idx-meta"></span></div>
+    <div class="indexes" id="indexes"></div>
+
+    <div class="section-title">
+      <span>Sector Heat Map <span style="color:var(--text-dim); font-weight:400; text-transform:none; letter-spacing:0.04em;">· S&amp;P 500 SPDR sector ETFs</span></span>
+      <span class="actions"><button class="mini-btn" id="heatmap-edit">Edit</button></span>
+    </div>
+    <div class="heatmap" id="heatmap"></div>
+
+    <div class="section-title">Macro Indicators <span class="meta">FRED</span></div>
+    <div class="macro-grid" id="macro-grid"></div>
+  </section>
+
+  <!-- LISTS -->
+  <section id="tab-lists" hidden>
+    <div class="section-title">
+      <span>Watchlists</span>
+      <span class="actions">
+        <button class="mini-btn" id="watch-edit">Edit</button>
+        <button class="mini-btn" id="watch-add-group">+ Group</button>
+      </span>
+    </div>
+    <div id="watch-container"></div>
+  </section>
+
+  <!-- NEWS -->
+  <section id="tab-news" hidden>
+    <div class="subtabs" id="news-subtabs">
+      <button data-sub="headlines" class="active">Headlines</button>
+      <button data-sub="reddit">Reddit</button>
+      <button data-sub="polymarket">Polymarket</button>
+    </div>
+    <div class="sub-pane" id="news-headlines">
+      <div class="section-title">Market &amp; Financial News <span class="meta" id="news-meta"></span></div>
+      <div class="news-list" id="news-list"></div>
+    </div>
+    <div class="sub-pane" id="news-reddit" hidden>
+      <div class="section-title">
+        <span>Reddit · Trading &amp; Geopolitics</span>
+        <span class="actions"><button class="mini-btn" id="reddit-manage">Manage</button></span>
+      </div>
+      <div class="news-list" id="reddit-list"></div>
+    </div>
+    <div class="sub-pane" id="news-polymarket" hidden>
+      <div class="section-title">Polymarket · Geopolitics &amp; Conflict <span class="meta">Live odds</span></div>
+      <div id="polymarket-list"></div>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section id="tab-calendar" hidden>
+    <div class="section-title">
+      <span>Earnings This Week</span>
+      <span class="actions">
+        <button class="mini-btn" id="cal-only-watch">Watchlist</button>
+        <button class="mini-btn active" id="cal-all">All</button>
+      </span>
+    </div>
+    <div id="calendar-list"></div>
+    <div class="disclaimer" style="margin-top:18px;">
+      Times shown as: BMO = before market open · DMH = during market hours · AMC = after market close.
+    </div>
+  </section>
+
+  <!-- RESEARCH -->
+  <section id="tab-research" hidden>
+    <div class="search-bar">
+      <input id="research-input" placeholder="Ticker (e.g. NVDA)" autocapitalize="characters" autocomplete="off" />
+      <button id="research-go">Go</button>
+    </div>
+    <div id="research-result"></div>
+  </section>
+</main>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settings-modal" hidden>
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>Settings <button id="settings-close">×</button></h2>
+
+    <div class="field">
+      <label>Finnhub API Key (required)</label>
+      <input id="set-finnhub" placeholder="Paste your Finnhub key" />
+      <div class="hint">Free, instant signup at <a href="https://finnhub.io/register" target="_blank">finnhub.io/register</a>. 60 calls/min.</div>
+    </div>
+
+    <div class="field">
+      <label>FRED API Key (for macro charts)</label>
+      <input id="set-fred" placeholder="Paste your FRED key" />
+      <div class="hint">Free, instant signup at <a href="https://fredaccount.stlouisfed.org/apikeys" target="_blank">fredaccount.stlouisfed.org</a>.
+      <strong>Note:</strong> FRED blocks direct browser calls (no CORS headers), so macro charts normally come from the
+      <code>data/macro.json</code> snapshot built by the repo's GitHub Action. This key is only used as a last-resort direct attempt.</div>
+    </div>
+
+    <div class="field">
+      <label>CORS relay (optional)</label>
+      <input id="set-relay" placeholder="https://api.allorigins.win/raw?url=" />
+      <div class="hint">Only used for sources that refuse direct browser calls (FRED, Reddit) when no snapshot file is available.
+      Leave blank to disable. The relay sees the request URL — never point it somewhere you don't trust, and note the FRED key
+      would travel in that URL.</div>
+    </div>
+
+    <div class="field">
+      <label>Reddit Subreddits (comma-separated, no r/)</label>
+      <textarea id="set-subs" placeholder="wallstreetbets, stocks, investing, geopolitics"></textarea>
+      <div class="hint">Each is fetched as a hot-posts feed and labeled in the Reddit tab.</div>
+    </div>
+
+    <div class="field">
+      <label>Auto-refresh interval (seconds)</label>
+      <input id="set-interval" type="number" min="30" max="600" />
+    </div>
+
+    <div class="field">
+      <label>Data health</label>
+      <div id="health-list" class="health-list"></div>
+      <div class="hint">Live status of every data source. If a panel is empty, the reason shows up here.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" id="settings-reset">Reset</button>
+      <button class="btn-primary" id="settings-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   v2 — settings now editable in-app (gear icon, top right).
+   Keys are stored in localStorage. No keys are sent anywhere
+   except directly to the API providers from your browser.
+   ===================================================================== */
+
+const DEFAULTS = {
+  FINNHUB_API_KEY: "",
+  FRED_API_KEY: "",
+  CORS_RELAY: "",
+  AUTO_REFRESH_SECONDS: 120,
+  SUBREDDITS: "wallstreetbets,stocks,investing,StockMarket,options,Economics,SecurityAnalysis,geopolitics,worldnews",
+};
+
+const STORE_KEY = "marketwatch.v2.config";
+const HEATMAP_KEY = "marketwatch.v2.heatmap";
+const WATCHLIST_KEY = "marketwatch.v2.watchlists";
+
+function loadConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+    return { ...DEFAULTS, ...saved };
+  } catch { return { ...DEFAULTS }; }
+}
+function saveConfig(c) { localStorage.setItem(STORE_KEY, JSON.stringify(c)); }
+let CONFIG = loadConfig();
+
+/* ---------- Static lists ---------- */
+const INDEXES = [
+  { sym: "SPY", name: "S&P 500" },
+  { sym: "QQQ", name: "Nasdaq 100" },
+  { sym: "DIA", name: "Dow 30" },
+  { sym: "IWM", name: "Russell 2000" },
+];
+
+const DEFAULT_HEATMAP = [
+  { sym: "XLK",  name: "Technology" },
+  { sym: "XLC",  name: "Communications" },
+  { sym: "XLY",  name: "Cons. Discretionary" },
+  { sym: "XLF",  name: "Financials" },
+  { sym: "XLV",  name: "Healthcare" },
+  { sym: "XLI",  name: "Industrials" },
+  { sym: "XLE",  name: "Energy" },
+  { sym: "XLP",  name: "Cons. Staples" },
+  { sym: "XLU",  name: "Utilities" },
+  { sym: "XLB",  name: "Materials" },
+  { sym: "XLRE", name: "Real Estate" },
+];
+
+const DEFAULT_WATCHLISTS = [
+  { id: "ai-semis", title: "AI & Semiconductors", tickers: ["NVDA","AMD","TSM","AVGO","ASML","ARM","MU","INTC","MRVL","SMCI","QCOM","PLTR"] },
+  { id: "defense",  title: "Defense & Conflict", tickers: ["LMT","RTX","NOC","GD","BA","HII","LDOS","LHX"] },
+  { id: "mag7",     title: "Mag 7 + Megacaps",   tickers: ["AAPL","MSFT","GOOGL","AMZN","META","TSLA","NVDA"] },
+];
+
+const FRED_SERIES = [
+  { id: "DGS10",     label: "10Y Treasury",   unit: "%" },
+  { id: "DFF",       label: "Fed Funds",      unit: "%" },
+  { id: "VIXCLS",    label: "VIX",            unit: "" },
+  { id: "DCOILWTICO",label: "WTI Crude",      unit: "$" },
+  { id: "UNRATE",    label: "Unemployment",   unit: "%" },
+  { id: "T10Y2Y",    label: "10Y-2Y Spread",  unit: "%" },
+];
+
+function loadHeatmap() {
+  try { return JSON.parse(localStorage.getItem(HEATMAP_KEY)) || DEFAULT_HEATMAP; }
+  catch { return DEFAULT_HEATMAP; }
+}
+function saveHeatmap(h) { localStorage.setItem(HEATMAP_KEY, JSON.stringify(h)); }
+let heatmap = loadHeatmap();
+
+function loadWatchlists() {
+  try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY)) || DEFAULT_WATCHLISTS; }
+  catch { return DEFAULT_WATCHLISTS; }
+}
+function saveWatchlists(w) { localStorage.setItem(WATCHLIST_KEY, JSON.stringify(w)); }
+let watchlists = loadWatchlists();
+
+/* ---------- State ---------- */
+const state = {
+  quotes: {},
+  news: [],
+  reddit: [],
+  polymarket: [],
+  fred: {},
+  earnings: [],
+  lastUpdate: null,
+  loading: false,
+  calFilter: "all",
+};
+
+/* =====================================================================
+   Source health — every fetcher reports here so a blank panel always
+   has a visible reason instead of a silent console.warn.
+   ===================================================================== */
+const SOURCES = [
+  { key: "quotes",     label: "Quotes" },
+  { key: "news",       label: "News" },
+  { key: "earnings",   label: "Earnings" },
+  { key: "fred",       label: "Macro" },
+  { key: "reddit",     label: "Reddit" },
+  { key: "polymarket", label: "Polymarket" },
+];
+const health = {};
+function setHealth(key, level, note) {
+  health[key] = { level, note, at: Date.now() };
+  renderHealth();
+}
+function renderHealth() {
+  const el = $("#health-list");
+  if (!el) return;
+  el.innerHTML = SOURCES.map(s => {
+    const h = health[s.key];
+    const level = h?.level || "idle";
+    const label = { ok: "OK", bad: "FAIL", warn: "PARTIAL", idle: "—" }[level] || "—";
+    return `<div class="health-row">
+      <span class="nm">${s.label}</span>
+      <span class="st ${level}">${label}</span>
+      <span class="note">${escapeHtml(h?.note || "not fetched yet")}</span>
+    </div>`;
+  }).join("");
+}
+
+/* =====================================================================
+   Finnhub request limiter.
+
+   The old code fired every quote at once via Promise.all. With the
+   default lists that is 40+ simultaneous requests, which blows straight
+   through Finnhub's free-tier burst cap (30 calls/sec, 60 calls/min) and
+   comes back as 429s — the app then silently rendered blanks. Everything
+   Finnhub now goes through this queue: max 5 in flight, max 55 per
+   rolling minute.
+   ===================================================================== */
+const limiter = { max: 5, perMin: 55, active: 0, stamps: [], queue: [] };
+function pumpLimiter() {
+  while (limiter.queue.length && limiter.active < limiter.max) {
+    const now = Date.now();
+    limiter.stamps = limiter.stamps.filter(t => now - t < 60000);
+    if (limiter.stamps.length >= limiter.perMin) {
+      setTimeout(pumpLimiter, 60000 - (now - limiter.stamps[0]) + 50);
+      return;
+    }
+    limiter.stamps.push(now);
+    limiter.active++;
+    limiter.queue.shift()();
+  }
+}
+function takeSlot() { return new Promise(res => { limiter.queue.push(res); pumpLimiter(); }); }
+function freeSlot() { limiter.active = Math.max(0, limiter.active - 1); pumpLimiter(); }
+
+class ApiError extends Error {
+  constructor(message, status) { super(message); this.status = status; }
+}
+
+/* Single entry point for every Finnhub call. `path` starts with "/". */
+async function finnhub(path) {
+  if (!CONFIG.FINNHUB_API_KEY) throw new ApiError("No Finnhub API key set (gear icon → paste key)", 0);
+  await takeSlot();
+  try {
+    const sep = path.includes("?") ? "&" : "?";
+    const url = `https://finnhub.io/api/v1${path}${sep}token=${encodeURIComponent(CONFIG.FINNHUB_API_KEY)}`;
+    let r;
+    try {
+      r = await fetch(url);
+    } catch (e) {
+      throw new ApiError("Network/CORS error reaching finnhub.io — check your connection", 0);
+    }
+    if (r.status === 401) throw new ApiError("Finnhub rejected the API key (401) — re-check it in settings", 401);
+    if (r.status === 403) throw new ApiError("Not on your Finnhub plan (403) — this endpoint is premium-only", 403);
+    if (r.status === 429) throw new ApiError("Finnhub rate limit hit (429) — slow the refresh interval down", 429);
+    if (!r.ok) throw new ApiError("Finnhub returned HTTP " + r.status, r.status);
+    return await r.json();
+  } finally {
+    freeSlot();
+  }
+}
+
+/* Fetch through the optional relay, for hosts that send no CORS headers. */
+async function relayFetch(url) {
+  const relay = (CONFIG.CORS_RELAY || "").trim();
+  if (!relay) throw new ApiError("blocked by CORS and no relay configured", 0);
+  const r = await fetch(relay + encodeURIComponent(url));
+  if (!r.ok) throw new ApiError("relay returned HTTP " + r.status, r.status);
+  return await r.json();
+}
+
+/* Load a snapshot written by the repo's GitHub Action (same-origin, no CORS). */
+async function loadSnapshot(name) {
+  const r = await fetch(`data/${name}.json`, { cache: "no-store" });
+  if (!r.ok) throw new ApiError("no snapshot (HTTP " + r.status + ")", r.status);
+  const d = await r.json();
+  if (!d || d.error) throw new ApiError(d?.error || "snapshot empty", 0);
+  return d;
+}
+function snapshotAge(d) {
+  if (!d?.generated) return "";
+  const mins = Math.round((Date.now() - new Date(d.generated).getTime()) / 60000);
+  if (mins < 90) return `snapshot ${mins}m old`;
+  return `snapshot ${Math.round(mins / 60)}h old`;
+}
+
+/* ---------- Utils ---------- */
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+const fmtPrice = (v) => v == null ? "—" : v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (v) => v == null ? "—" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
+const fmtTime = (d) => d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+const sign = (n) => n > 0 ? "up" : n < 0 ? "down" : "";
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+/* Tickers and group ids get interpolated into inline onclick="..." handlers.
+   Strip anything that isn't a plausible symbol character so a pasted value
+   can never break out of the attribute. */
+const cleanSym = (s) => String(s == null ? "" : s).toUpperCase().replace(/[^A-Z0-9.:_-]/g, "").slice(0, 24);
+const cleanId  = (s) => String(s == null ? "" : s).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
+
+function timeAgo(d) {
+  const s = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (s < 60) return s + "s ago";
+  if (s < 3600) return Math.floor(s/60) + "m ago";
+  if (s < 86400) return Math.floor(s/3600) + "h ago";
+  return Math.floor(s/86400) + "d ago";
+}
+
+function heatColor(pct) {
+  const clamped = Math.max(-3, Math.min(3, pct || 0));
+  const intensity = Math.abs(clamped) / 3;
+  return clamped >= 0
+    ? `rgba(74, 222, 128, ${0.10 + intensity * 0.55})`
+    : `rgba(248, 113, 113, ${0.10 + intensity * 0.55})`;
+}
+
+function classifyHeadline(headline, summary, source) {
+  const t = ((headline || "") + " " + (summary || "")).toLowerCase();
+  if (/(war|ukrain|russia|israel|gaza|iran|china|taiwan|conflict|sanction|missile|nato)/.test(t)) return "geopolitics";
+  if (/(merger|acquisition|acquir|buyout|deal|spin-off|takeover)/.test(t)) return "merger";
+  if (/(bitcoin|btc|ethereum|crypto|coin)/.test(t)) return "crypto";
+  return "markets";
+}
+
+/* ---------- Fetchers ---------- */
+/* Quotes are cached so a refresh does not re-spend the rate budget on
+   symbols that were just fetched. */
+const quoteCache = new Map();
+
+async function fetchQuote(sym) {
+  const ttl = Math.max(30, CONFIG.AUTO_REFRESH_SECONDS - 10) * 1000;
+  const hit = quoteCache.get(sym);
+  if (hit && Date.now() - hit.at < ttl) return hit.value;
+  const q = await finnhub(`/quote?symbol=${encodeURIComponent(sym)}`);
+  // Finnhub answers 200 with all-zero fields for unknown/unsupported tickers.
+  const value = (q && q.c) ? q : null;
+  quoteCache.set(sym, { at: Date.now(), value });
+  return value;
+}
+
+async function fetchAllQuotes(symbols) {
+  const results = {};
+  let firstError = null, failed = 0, unknown = 0;
+  await Promise.all(symbols.map(async (s) => {
+    try {
+      const q = await fetchQuote(s);
+      results[s] = q;
+      if (!q) unknown++;
+    } catch (e) {
+      results[s] = null; failed++;
+      if (!firstError) firstError = e;
+    }
+  }));
+  const okCount = symbols.length - failed - unknown;
+  if (failed === symbols.length && symbols.length) {
+    setHealth("quotes", "bad", firstError?.message || "all quote requests failed");
+  } else if (failed || unknown) {
+    setHealth("quotes", "warn", `${okCount}/${symbols.length} symbols priced` +
+      (failed ? ` · ${failed} failed: ${firstError?.message || "error"}` : "") +
+      (unknown ? ` · ${unknown} returned no data (ticker not on the free tier?)` : ""));
+  } else {
+    setHealth("quotes", "ok", `${okCount} symbols priced`);
+  }
+  return results;
+}
+
+async function fetchNews() {
+  try {
+    const d = await finnhub("/news?category=general");
+    const items = Array.isArray(d) ? d.slice(0, 30) : [];
+    setHealth("news", items.length ? "ok" : "warn", items.length ? items.length + " headlines" : "Finnhub returned no headlines");
+    return items;
+  } catch (e) {
+    setHealth("news", "bad", e.message);
+    return [];
+  }
+}
+
+/* Reddit blocks unauthenticated cross-origin browser reads of *.json,
+   so prefer the snapshot the GitHub Action writes; fall back to direct
+   (works in some contexts) and then to the relay. */
+async function fetchReddit() {
+  try {
+    const snap = await loadSnapshot("reddit");
+    if (snap.posts?.length) {
+      setHealth("reddit", "ok", `${snap.posts.length} posts · ${snapshotAge(snap)}`);
+      return snap.posts;
+    }
+  } catch (e) { /* fall through to live attempts */ }
+
+  const subs = (CONFIG.SUBREDDITS || "").split(",").map(s => s.trim()).filter(Boolean);
+  const out = [];
+  let lastError = null, okSubs = 0;
+  await Promise.all(subs.map(async (sub) => {
+    const url = `https://www.reddit.com/r/${encodeURIComponent(sub)}/hot.json?limit=8&raw_json=1`;
+    let d = null;
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new ApiError("HTTP " + r.status, r.status);
+      d = await r.json();
+    } catch (e) {
+      try { d = await relayFetch(url); }
+      catch (e2) { lastError = e2.message === "blocked by CORS and no relay configured" ? e2 : e; return; }
+    }
+    okSubs++;
+    for (const post of (d?.data?.children || [])) {
+      const p = post.data;
+      if (p.stickied) continue;
+      out.push({
+        sub, title: p.title, url: "https://reddit.com" + p.permalink, ext: p.url,
+        score: p.score, comments: p.num_comments, author: p.author,
+        created: p.created_utc, flair: p.link_flair_text || "",
+      });
+    }
+  }));
+  out.sort((a, b) => b.created - a.created);
+  if (!okSubs) {
+    setHealth("reddit", "bad", "Reddit blocks direct browser calls. " +
+      (lastError?.message || "") + " — publish the repo so data/reddit.json is served, or set a CORS relay.");
+  } else {
+    setHealth("reddit", okSubs === subs.length ? "ok" : "warn", `${out.length} posts from ${okSubs}/${subs.length} subreddits (live)`);
+  }
+  return out.slice(0, 60);
+}
+
+async function fetchPolymarket() {
+  // Public gamma API — no key needed
+  try {
+    const r = await fetch("https://gamma-api.polymarket.com/events?closed=false&limit=40&order=volume24hr&ascending=false&tag_slug=geopolitics");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const events = await r.json();
+    const out = (events || []).slice(0, 20);
+    setHealth("polymarket", out.length ? "ok" : "warn", out.length + " geopolitics markets");
+    return out;
+  } catch (e) {
+    console.warn("polymarket geopolitics fail, trying fallback", e);
+    try {
+      const r = await fetch("https://gamma-api.polymarket.com/events?closed=false&limit=40&order=volume24hr&ascending=false");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const events = await r.json();
+      // Filter for conflict/geopolitics keywords client-side
+      const kws = /(war|conflict|ukrain|russia|israel|gaza|iran|china|taiwan|trump|putin|nato|election|sanction)/i;
+      const out = (events || []).filter(e => kws.test(e.title || "") || kws.test(e.description || "")).slice(0, 20);
+      setHealth("polymarket", "warn", `tag feed failed, keyword fallback found ${out.length} markets`);
+      return out;
+    } catch (e2) { setHealth("polymarket", "bad", e2.message); return []; }
+  }
+}
+
+/* FRED sends no Access-Control-Allow-Origin header, so a browser fetch to
+   api.stlouisfed.org is blocked no matter how valid the key is. Order of
+   preference: same-origin snapshot from the Action → relay → direct. */
+async function fetchAllFRED() {
+  try {
+    const snap = await loadSnapshot("macro");
+    if (snap.series && Object.keys(snap.series).length) {
+      const have = Object.values(snap.series).filter(v => v && v.length).length;
+      setHealth("fred", have ? "ok" : "warn", `${have}/${FRED_SERIES.length} series · ${snapshotAge(snap)}`);
+      return snap.series;
+    }
+  } catch (e) { /* fall through to live attempts */ }
+
+  if (!CONFIG.FRED_API_KEY) {
+    setHealth("fred", "bad", "No macro snapshot found and no FRED key set.");
+    return {};
+  }
+
+  const out = {};
+  let lastError = null, okCount = 0;
+  await Promise.all(FRED_SERIES.map(async (s) => {
+    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${s.id}` +
+                `&api_key=${encodeURIComponent(CONFIG.FRED_API_KEY)}&file_type=json&sort_order=desc&limit=60`;
+    let d = null;
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new ApiError("HTTP " + r.status, r.status);
+      d = await r.json();
+    } catch (e) {
+      try { d = await relayFetch(url); }
+      catch (e2) { lastError = e; out[s.id] = null; return; }
+    }
+    const obs = (d.observations || []).filter(o => o.value !== ".").reverse();
+    out[s.id] = obs.map(o => ({ date: o.date, value: parseFloat(o.value) }));
+    okCount++;
+  }));
+
+  if (!okCount) {
+    setHealth("fred", "bad", "FRED refuses direct browser calls (no CORS headers). " +
+      "Publish the repo so data/macro.json is served, or set a CORS relay in settings.");
+  } else {
+    setHealth("fred", okCount === FRED_SERIES.length ? "ok" : "warn", `${okCount}/${FRED_SERIES.length} series (live)`);
+  }
+  return out;
+}
+
+async function fetchEarnings() {
+  try {
+    const today = new Date();
+    const end = new Date(today); end.setDate(today.getDate() + 7);
+    const fmt = (d) => d.toISOString().slice(0, 10);
+    const d = await finnhub(`/calendar/earnings?from=${fmt(today)}&to=${fmt(end)}`);
+    const rows = d.earningsCalendar || [];
+    setHealth("earnings", rows.length ? "ok" : "warn",
+      rows.length ? `${rows.length} reports in the next 7 days` : "Finnhub returned an empty calendar for the next 7 days");
+    return rows;
+  } catch (e) { setHealth("earnings", "bad", e.message); return []; }
+}
+
+/* ---------- Renderers ---------- */
+function renderKeyBanner() {
+  const el = $("#key-banner");
+  if (!CONFIG.FINNHUB_API_KEY) {
+    el.innerHTML = `<div class="banner"><strong>Setup needed</strong>Tap the gear icon (top right) and paste your free Finnhub key. Get one at <code>finnhub.io/register</code>.</div>`;
+    return;
+  }
+  // Surface whichever sources are currently failing, so "the app is broken"
+  // always comes with a reason attached.
+  const broken = SOURCES.filter(s => health[s.key]?.level === "bad");
+  if (broken.length) {
+    el.innerHTML = `<div class="banner"><strong>${broken.length} data source${broken.length > 1 ? "s" : ""} failing</strong>
+      ${broken.map(s => `${escapeHtml(s.label)}: ${escapeHtml(health[s.key].note)}`).join("<br>")}
+      <br><br>Open the gear icon → Data health for the full picture.</div>`;
+  } else { el.innerHTML = ""; }
+}
+
+function renderIndexes() {
+  $("#indexes").innerHTML = INDEXES.map(({ sym, name }) => {
+    const q = state.quotes[sym]; const dp = q?.dp; const c = q?.c;
+    return `<div class="index-card">
+      <div class="sym">${sym} · ${name}</div>
+      <div class="price">${fmtPrice(c)}</div>
+      <div class="chg ${sign(dp)}">${fmtPct(dp)} <span style="color:var(--text-faint)">${q?.d != null ? (q.d >= 0 ? "+" : "") + q.d.toFixed(2) : ""}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function renderHeatmap() {
+  const el = $("#heatmap");
+  el.innerHTML = heatmap.map(({ sym, name }, i) => {
+    const q = state.quotes[sym]; const dp = q?.dp ?? 0;
+    return `<div class="heat-tile" data-sym="${escapeHtml(sym)}" style="background:${heatColor(dp)}" onclick="window.openResearch('${cleanSym(sym)}')">
+      <button class="remove-btn" onclick="event.stopPropagation();window.removeHeatTile(${i})">×</button>
+      <div><div class="sym">${sym}</div><div class="name">${escapeHtml(name)}</div></div>
+      <div class="pct ${sign(dp)}">${fmtPct(dp)}</div>
+    </div>`;
+  }).join("") + `<button class="heat-add-tile" onclick="window.addHeatTile()">+</button>`;
+}
+
+function renderMacro() {
+  const el = $("#macro-grid");
+  const loaded = Object.values(state.fred || {}).filter(v => v && v.length).length;
+  if (!loaded) {
+    const h = health.fred;
+    el.innerHTML = `<div class="empty" style="grid-column:1/-1;">${escapeHtml(h?.note ||
+      "Add a free FRED API key in settings to enable macro charts.")}</div>`;
+    return;
+  }
+  el.innerHTML = FRED_SERIES.map(s => {
+    const data = state.fred[s.id];
+    if (!data || data.length < 2) return `<div class="macro-card"><div class="top"><span class="label">${s.label}</span></div><div class="val">—</div></div>`;
+    const latest = data[data.length - 1].value;
+    const prev = data[data.length - 2].value;
+    const ch = latest - prev;
+    const min = Math.min(...data.map(d => d.value));
+    const max = Math.max(...data.map(d => d.value));
+    const range = (max - min) || 1;
+    const pts = data.map((d, i) => `${(i / (data.length - 1)) * 100},${36 - ((d.value - min) / range) * 30 - 3}`).join(" ");
+    const klass = sign(ch);
+    const strokeColor = ch >= 0 ? "var(--up)" : "var(--down)";
+    return `<div class="macro-card">
+      <div class="top">
+        <span class="label">${s.label}</span>
+        <span class="chg ${klass}">${ch >= 0 ? "+" : ""}${ch.toFixed(2)}</span>
+      </div>
+      <div class="val">${s.unit === "$" ? "$" : ""}${latest.toFixed(2)}${s.unit && s.unit !== "$" ? s.unit : ""}</div>
+      <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+        <polyline fill="none" stroke="${strokeColor}" stroke-width="1.5" points="${pts}" />
+      </svg>
+    </div>`;
+  }).join("");
+}
+
+function renderWatchlists() {
+  const el = $("#watch-container");
+  if (!watchlists.length) {
+    el.innerHTML = `<div class="empty">No watchlist groups. Tap "+ Group" to add one.</div>`;
+    return;
+  }
+  el.innerHTML = watchlists.map(group => {
+    const rows = group.tickers.map((tk, i) => {
+      const q = state.quotes[tk]; const dp = q?.dp; const c = q?.c;
+      return `<div class="watch-row" onclick="window.openResearch('${cleanSym(tk)}')">
+        <div class="left"><span class="ticker">${escapeHtml(tk)}</span><span class="name">tap to research</span></div>
+        <span class="price">${fmtPrice(c)}</span>
+        <span class="chg ${sign(dp)}">${fmtPct(dp)}</span>
+        <button class="remove" onclick="event.stopPropagation();window.removeTicker('${cleanId(group.id)}', ${i})">×</button>
+      </div>`;
+    }).join("");
+    return `<div class="section-title" style="margin-top:20px;">
+      <span>${escapeHtml(group.title)}</span>
+      <span class="actions"><button class="mini-btn del-group" onclick="window.removeGroup('${cleanId(group.id)}')">Delete</button></span>
+    </div>
+    <div class="watchlist">
+      ${rows || '<div class="empty">No tickers</div>'}
+      <div class="add-row">
+        <input data-group="${escapeHtml(group.id)}" placeholder="ADD TICKER" />
+        <button onclick="window.addTickerFromInput('${cleanId(group.id)}')">Add</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderHeadlines() {
+  const el = $("#news-list");
+  if (!CONFIG.FINNHUB_API_KEY) { el.innerHTML = `<div class="empty">Add your Finnhub key in settings to load headlines.</div>`; return; }
+  if (!state.news.length) {
+    el.innerHTML = `<div class="empty">${escapeHtml(health.news?.note || "No headlines loaded yet.")}</div>`;
+    return;
+  }
+  el.innerHTML = state.news.map(n => {
+    const dt = n.datetime ? new Date(n.datetime * 1000) : null;
+    const tag = classifyHeadline(n.headline, n.summary, n.source);
+    return `<a class="news-item" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener">
+      <div class="meta">
+        <span class="src"><span class="tag ${tag}">${tag}</span> ${escapeHtml((n.source || "").toUpperCase())}</span>
+        <span>${dt ? timeAgo(dt) : ""}</span>
+      </div>
+      <div class="headline">${escapeHtml(n.headline || "")}</div>
+      ${n.summary ? `<div class="summary">${escapeHtml(n.summary)}</div>` : ""}
+    </a>`;
+  }).join("");
+  $("#news-meta").textContent = state.news.length + " items";
+}
+
+function renderReddit() {
+  const el = $("#reddit-list");
+  if (!state.reddit.length) {
+    el.innerHTML = `<div class="empty">${escapeHtml(health.reddit?.note || "No Reddit posts loaded yet.")}</div>`;
+    return;
+  }
+  el.innerHTML = state.reddit.map(p => {
+    const dt = new Date(p.created * 1000);
+    return `<a class="news-item" href="${p.url}" target="_blank" rel="noopener">
+      <div class="meta">
+        <span class="src"><span class="tag reddit">r/${escapeHtml(p.sub)}</span>${p.flair ? `<span style="color:var(--text-dim);font-size:9px;">${escapeHtml(p.flair)}</span>` : ""}</span>
+        <span>${timeAgo(dt)}</span>
+      </div>
+      <div class="headline">${escapeHtml(p.title)}</div>
+      <div class="reddit-meta">↑ ${p.score.toLocaleString()} · 💬 ${p.comments.toLocaleString()} · u/${escapeHtml(p.author)}</div>
+    </a>`;
+  }).join("");
+}
+
+function renderPolymarket() {
+  const el = $("#polymarket-list");
+  if (!state.polymarket.length) { el.innerHTML = `<div class="empty">${escapeHtml(health.polymarket?.note || "No markets loaded.")}</div>`; return; }
+  el.innerHTML = state.polymarket.map(ev => {
+    const markets = (ev.markets || []).slice(0, 5);
+    const outcomes = markets.map(m => {
+      let yesPrice = null;
+      try {
+        const outcomesArr = typeof m.outcomes === "string" ? JSON.parse(m.outcomes) : m.outcomes;
+        const pricesArr = typeof m.outcomePrices === "string" ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+        if (outcomesArr && pricesArr) {
+          const yesIdx = outcomesArr.findIndex(o => /yes/i.test(o));
+          yesPrice = yesIdx >= 0 ? parseFloat(pricesArr[yesIdx]) : parseFloat(pricesArr[0]);
+        }
+      } catch {}
+      if (yesPrice == null || isNaN(yesPrice)) return "";
+      const pct = Math.round(yesPrice * 100);
+      return `<div class="poly-outcome">
+        <span class="nm">${escapeHtml((m.groupItemTitle || m.question || "").slice(0, 60))}</span>
+        <span class="bar"><span class="fill" style="width:${pct}%"></span></span>
+        <span class="pct">${pct}%</span>
+      </div>`;
+    }).join("");
+    const vol = ev.volume24hr ? `24h vol: $${Math.round(ev.volume24hr).toLocaleString()}` : "";
+    return `<a class="poly-item" href="https://polymarket.com/event/${ev.slug}" target="_blank" rel="noopener">
+      <div class="q">${escapeHtml(ev.title || "")}</div>
+      <div class="outcomes">${outcomes || '<div class="empty" style="padding:6px;">No outcome data</div>'}</div>
+      ${vol ? `<div class="vol">${vol}</div>` : ""}
+    </a>`;
+  }).join("");
+}
+
+function renderCalendar() {
+  const el = $("#calendar-list");
+  if (!state.earnings.length) {
+    el.innerHTML = `<div class="empty">${escapeHtml(health.earnings?.note || "No earnings scheduled, or data not loaded.")}</div>`;
+    return;
+  }
+
+  const watched = new Set([
+    ...watchlists.flatMap(g => g.tickers),
+    ...heatmap.map(h => h.sym),
+  ]);
+  const rows = state.calFilter === "watch"
+    ? state.earnings.filter(e => watched.has(e.symbol))
+    : state.earnings;
+
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty">Nothing from your watchlists reports in the next 7 days.</div>`;
+    return;
+  }
+
+  // group by date
+  const byDate = {};
+  for (const e of rows) {
+    const d = e.date;
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(e);
+  }
+  // Within a day, order the way the trading day runs: pre-market, mid-day,
+  // after-hours, then anything unscheduled.
+  const hourRank = { bmo: 0, dmh: 1, amc: 2 };
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  const dates = Object.keys(byDate).sort();
+  el.innerHTML = dates.map(d => {
+    const items = byDate[d].sort((a, b) => {
+      const ra = hourRank[a.hour] ?? 3, rb = hourRank[b.hour] ?? 3;
+      return ra - rb || String(a.symbol).localeCompare(String(b.symbol));
+    });
+    const isToday = d === todayIso;
+    const heading = new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+    return `<div class="cal-day${isToday ? " today" : ""}">
+      <div class="cal-day-header"><span>${isToday ? "Today · " : ""}${heading}</span><span class="count">${items.length}</span></div>
+      ${items.map(it => {
+        const hourCode = it.hour || "";
+        let whenKlass = "unk", whenLbl = "Time TBD";
+        if (hourCode === "bmo") { whenKlass = "bmo"; whenLbl = "Pre-Market"; }
+        else if (hourCode === "amc") { whenKlass = "amc"; whenLbl = "After-Hours"; }
+        else if (hourCode === "dmh") { whenKlass = "dmh"; whenLbl = "Mid-Day"; }
+        const est = it.epsEstimate != null ? it.epsEstimate.toFixed(2) : "—";
+        // Once a company has reported, Finnhub fills in epsActual.
+        const hasActual = it.epsActual != null;
+        const beat = hasActual && it.epsEstimate != null ? it.epsActual - it.epsEstimate : null;
+        const period = (it.year != null && it.quarter != null) ? it.year + "Q" + it.quarter : "";
+        return `<div class="cal-item" onclick="window.openResearch('${cleanSym(it.symbol)}')">
+          <div class="info">
+            <span class="ticker">${escapeHtml(String(it.symbol))}</span>
+            <span class="when ${whenKlass}">${whenLbl}</span>
+            <div class="est">${escapeHtml(period)}${hasActual ? " · reported" : ""}</div>
+          </div>
+          <div class="eps">
+            <div class="eps-lbl">${hasActual ? "EPS Act / Est" : "EPS Est"}</div>
+            <div class="eps-val">${hasActual
+              ? `<span class="${beat == null ? "" : sign(beat)}">${it.epsActual.toFixed(2)}</span> <span class="actual">/ ${est}</span>`
+              : est}</div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- Research panel ---------- */
+async function runResearch(symRaw) {
+  const sym = cleanSym(symRaw);
+  const el = $("#research-result");
+  if (!sym) { el.innerHTML = `<div class="empty">Enter a ticker above.</div>`; return; }
+  if (!CONFIG.FINNHUB_API_KEY) { el.innerHTML = `<div class="banner"><strong>Setup needed</strong>Add your Finnhub key in settings to research tickers.</div>`; return; }
+
+  el.innerHTML = `<div class="skel" style="height:200px;"></div>`;
+
+  // Each sub-request is allowed to fail on its own; we keep the error so the
+  // panel can say *why* a block is missing instead of just omitting it.
+  const errors = {};
+  const tolerant = (name, p) => p.catch(e => { errors[name] = e; return null; });
+
+  const from30 = new Date(Date.now() - 30 * 86400 * 1000).toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [quote, profile, recs, candle, metrics, cnews] = await Promise.all([
+    tolerant("quote",   finnhub(`/quote?symbol=${sym}`)),
+    tolerant("profile", finnhub(`/stock/profile2?symbol=${sym}`)),
+    tolerant("recs",    finnhub(`/stock/recommendation?symbol=${sym}`)),
+    tolerant("candle",  finnhub(`/stock/candle?symbol=${sym}&resolution=D&from=${Math.floor(Date.now()/1000) - 86400*120}&to=${Math.floor(Date.now()/1000)}`)),
+    tolerant("metrics", finnhub(`/stock/metric?symbol=${sym}&metric=all`)),
+    tolerant("cnews",   finnhub(`/company-news?symbol=${sym}&from=${from30}&to=${today}`)),
+  ]);
+
+  if (!quote || quote.c == null || quote.c === 0) {
+    const why = errors.quote ? escapeHtml(errors.quote.message) : `No data found for "${escapeHtml(sym)}". Check the ticker.`;
+    el.innerHTML = `<div class="empty">${why}</div>`;
+    return;
+  }
+
+  // ---- Head ----
+  const klass = sign(quote.dp);
+  const m = metrics?.metric || {};
+  const high52 = m["52WeekHigh"];
+  const low52 = m["52WeekLow"];
+  const pe = m.peTTM;
+  const mc = profile?.marketCapitalization;
+
+  // ---- Recos: latest entry ----
+  const latestReco = (recs && recs.length) ? recs[0] : null;
+  const totalReco = latestReco ? (latestReco.strongBuy + latestReco.buy + latestReco.hold + latestReco.sell + latestReco.strongSell) : 0;
+
+  // ---- Sparkline from candle ----
+  let sparkSvg = "";
+  let ma50 = null;
+  if (candle && candle.s === "ok" && candle.c && candle.c.length) {
+    const closes = candle.c;
+    const min = Math.min(...closes); const max = Math.max(...closes);
+    const range = (max - min) || 1;
+    const pts = closes.map((v, i) => `${(i / (closes.length - 1)) * 100},${60 - ((v - min) / range) * 54 - 3}`).join(" ");
+    const lineColor = closes[closes.length-1] >= closes[0] ? "var(--up)" : "var(--down)";
+    sparkSvg = `<svg viewBox="0 0 100 60" preserveAspectRatio="none" style="width:100%;height:120px;display:block;margin-top:12px;border:1px solid var(--border);border-radius:8px;padding:6px;box-sizing:border-box;">
+      <polyline fill="none" stroke="${lineColor}" stroke-width="1.2" points="${pts}" />
+    </svg>`;
+    if (closes.length >= 50) {
+      const last50 = closes.slice(-50);
+      ma50 = last50.reduce((a,b)=>a+b,0) / 50;
+    }
+  } else if (errors.candle?.status === 403) {
+    // Finnhub moved historical candles behind a paid plan, so the free tier
+    // gets a 403 here. Say so rather than silently dropping the chart.
+    sparkSvg = `<div class="empty" style="padding:12px;">Price history needs a paid Finnhub plan
+      (<code>/stock/candle</code> returns 403 on the free tier), so the 120-day chart and the
+      50-day moving average are unavailable. Everything else below is free-tier data.</div>`;
+  } else if (errors.candle) {
+    sparkSvg = `<div class="empty" style="padding:12px;">Chart unavailable: ${escapeHtml(errors.candle.message)}</div>`;
+  }
+
+  // ---- 52w range marker ----
+  let rangeBlock = "";
+  if (high52 && low52 && quote.c) {
+    const pct = ((quote.c - low52) / (high52 - low52)) * 100;
+    rangeBlock = `<div class="range-bar">
+      <div class="l">52-week range</div>
+      <div class="track"><div class="marker" style="left:${Math.max(0,Math.min(100,pct))}%"></div></div>
+      <div class="ends"><span>$${low52.toFixed(2)}</span><span>$${high52.toFixed(2)}</span></div>
+    </div>`;
+  }
+
+  // ---- Reco bar ----
+  let recoBlock = "";
+  if (latestReco && totalReco > 0) {
+    const b = (latestReco.strongBuy + latestReco.buy);
+    const h = latestReco.hold;
+    const s = (latestReco.sell + latestReco.strongSell);
+    const bw = (b / totalReco) * 100;
+    const hw = (h / totalReco) * 100;
+    const sw = (s / totalReco) * 100;
+    recoBlock = `<div class="range-bar">
+      <div class="l">Analyst Recommendations · ${totalReco} analysts</div>
+      <div class="recos">
+        <div class="reco-buy" style="width:${bw}%">${b || ""}</div>
+        <div class="reco-hold" style="width:${hw}%">${h || ""}</div>
+        <div class="reco-sell" style="width:${sw}%">${s || ""}</div>
+      </div>
+      <div class="reco-legend"><span class="b">Buy</span><span class="h">Hold</span><span class="s">Sell</span></div>
+    </div>`;
+  }
+
+  // ---- Observations (factual only) ----
+  const obs = [];
+  obs.push({ k: klass, t: `Currently $${quote.c.toFixed(2)}, ${quote.dp >= 0 ? "up" : "down"} ${Math.abs(quote.dp).toFixed(2)}% today.` });
+  if (high52) {
+    const offHigh = ((high52 - quote.c) / high52) * 100;
+    obs.push({ k: offHigh < 5 ? "up" : (offHigh > 25 ? "down" : ""), t: `Trading ${offHigh.toFixed(1)}% below the 52-week high of $${high52.toFixed(2)}.` });
+  }
+  if (low52) {
+    const offLow = ((quote.c - low52) / low52) * 100;
+    obs.push({ k: "", t: `${offLow.toFixed(1)}% above the 52-week low of $${low52.toFixed(2)}.` });
+  }
+  if (ma50 != null) {
+    const vsMa = ((quote.c - ma50) / ma50) * 100;
+    obs.push({ k: vsMa >= 0 ? "up" : "down", t: `${vsMa >= 0 ? "Above" : "Below"} the 50-day moving average by ${Math.abs(vsMa).toFixed(2)}% ($${ma50.toFixed(2)}).` });
+  }
+  if (latestReco && totalReco > 0) {
+    const b = latestReco.strongBuy + latestReco.buy;
+    const s = latestReco.sell + latestReco.strongSell;
+    obs.push({ k: b > s ? "up" : (s > b ? "down" : ""), t: `${totalReco} analysts: ${b} buy · ${latestReco.hold} hold · ${s} sell.` });
+  }
+  if (pe) obs.push({ k: "", t: `Trailing P/E ratio: ${pe.toFixed(2)}.` });
+
+  const recentNews = (cnews || []).slice(0, 5);
+
+  el.innerHTML = `
+    <div class="r-block">
+      <div class="r-head">
+        <div class="tick">${sym}</div>
+        <div class="nm">${escapeHtml(profile?.name || "")} ${profile?.finnhubIndustry ? "· " + escapeHtml(profile.finnhubIndustry) : ""}</div>
+        <div class="px">$${quote.c.toFixed(2)}</div>
+        <div class="ch ${klass}">${fmtPct(quote.dp)} (${quote.d >= 0 ? "+" : ""}${quote.d.toFixed(2)})</div>
+        ${sparkSvg}
+        <div class="r-stats">
+          <div class="r-stat"><div class="l">Open</div><div class="v">$${(quote.o ?? 0).toFixed(2)}</div></div>
+          <div class="r-stat"><div class="l">Prev Close</div><div class="v">$${(quote.pc ?? 0).toFixed(2)}</div></div>
+          <div class="r-stat"><div class="l">Day High</div><div class="v">$${(quote.h ?? 0).toFixed(2)}</div></div>
+          <div class="r-stat"><div class="l">Day Low</div><div class="v">$${(quote.l ?? 0).toFixed(2)}</div></div>
+          ${mc ? `<div class="r-stat"><div class="l">Market Cap</div><div class="v">$${(mc / 1000).toFixed(1)}B</div></div>` : ""}
+          ${pe ? `<div class="r-stat"><div class="l">P/E (TTM)</div><div class="v">${pe.toFixed(2)}</div></div>` : ""}
+        </div>
+        ${rangeBlock}
+        ${recoBlock}
+      </div>
+    </div>
+
+    <div class="r-block">
+      <div class="section-title">What the data says</div>
+      <ul class="obs-list">
+        ${obs.map(o => `<li class="${o.k}">${escapeHtml(o.t)}</li>`).join("")}
+      </ul>
+    </div>
+
+    ${recentNews.length ? `<div class="r-block">
+      <div class="section-title">Recent ${sym} News</div>
+      <div class="news-list">
+        ${recentNews.map(n => `<a class="news-item" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener">
+          <div class="meta"><span class="src">${escapeHtml(n.source || "")}</span><span>${n.datetime ? timeAgo(new Date(n.datetime*1000)) : ""}</span></div>
+          <div class="headline">${escapeHtml(n.headline || "")}</div>
+        </a>`).join("")}
+      </div>
+    </div>` : ""}
+
+    <div class="disclaimer">
+      Data only. No price predictions, no recommendations, no investment advice.
+      All observations are descriptive of current/historical data from Finnhub.
+      Verify everything independently before acting.
+    </div>
+  `;
+}
+
+/* ---------- Editing handlers ---------- */
+window.openResearch = (sym) => {
+  $("#research-input").value = sym;
+  switchTab("research");
+  runResearch(sym);
+};
+
+window.removeHeatTile = (i) => { heatmap.splice(i, 1); saveHeatmap(heatmap); renderHeatmap(); requestRefresh(); };
+window.addHeatTile = () => {
+  const sym = prompt("Add ticker (e.g. NVDA or XLK):");
+  if (!sym) return;
+  const s = cleanSym(sym);
+  if (!s) return;
+  heatmap.push({ sym: s, name: s });
+  saveHeatmap(heatmap); renderHeatmap(); requestRefresh();
+};
+
+window.removeTicker = (groupId, i) => {
+  const g = watchlists.find(g => g.id === groupId); if (!g) return;
+  g.tickers.splice(i, 1);
+  saveWatchlists(watchlists); renderWatchlists(); requestRefresh();
+};
+window.addTickerFromInput = (groupId) => {
+  const input = document.querySelector(`input[data-group="${groupId}"]`);
+  if (!input) return;
+  const v = cleanSym(input.value);
+  if (!v) return;
+  const g = watchlists.find(g => g.id === groupId); if (!g) return;
+  if (!g.tickers.includes(v)) g.tickers.push(v);
+  input.value = "";
+  saveWatchlists(watchlists); renderWatchlists(); requestRefresh();
+};
+window.removeGroup = (groupId) => {
+  if (!confirm("Delete this watchlist group?")) return;
+  watchlists = watchlists.filter(g => g.id !== groupId);
+  saveWatchlists(watchlists); renderWatchlists();
+};
+window.addGroup = () => {
+  const t = prompt("New watchlist name:");
+  if (!t) return;
+  const id = "g" + Date.now();
+  watchlists.push({ id, title: t.trim(), tickers: [] });
+  saveWatchlists(watchlists); renderWatchlists();
+  document.body.classList.add("editing-watchlist");
+  $("#watch-edit").classList.add("active");
+  $("#watch-edit").textContent = "Done";
+};
+
+/* ---------- Refresh orchestration ---------- */
+async function refreshAll() {
+  if (state.loading) return;
+  state.loading = true;
+  $("#refresh").classList.add("spinning");
+  renderKeyBanner();
+
+  const quoteSyms = [
+    ...INDEXES.map(x => x.sym),
+    ...heatmap.map(x => x.sym),
+    ...watchlists.flatMap(g => g.tickers),
+  ];
+  const uniqSyms = [...new Set(quoteSyms)];
+
+  if (!CONFIG.FINNHUB_API_KEY) {
+    for (const k of ["quotes", "news", "earnings"]) setHealth(k, "bad", "No Finnhub API key set");
+  }
+
+  // One failing source must never take the whole refresh down with it.
+  const [quotes, news, reddit, polymarket, fred, earnings] = await Promise.all([
+    fetchAllQuotes(uniqSyms).catch(e => { setHealth("quotes", "bad", e.message); return {}; }),
+    fetchNews().catch(e => { setHealth("news", "bad", e.message); return []; }),
+    fetchReddit().catch(e => { setHealth("reddit", "bad", e.message); return []; }),
+    fetchPolymarket().catch(e => { setHealth("polymarket", "bad", e.message); return []; }),
+    fetchAllFRED().catch(e => { setHealth("fred", "bad", e.message); return {}; }),
+    fetchEarnings().catch(e => { setHealth("earnings", "bad", e.message); return []; }),
+  ]);
+
+  state.quotes = quotes;
+  state.news = news;
+  state.reddit = reddit;
+  state.polymarket = polymarket;
+  state.fred = fred;
+  state.earnings = earnings;
+  state.lastUpdate = new Date();
+
+  renderKeyBanner();
+  renderIndexes();
+  renderHeatmap();
+  renderMacro();
+  renderWatchlists();
+  renderHeadlines();
+  renderReddit();
+  renderPolymarket();
+  renderCalendar();
+
+  $("#last-updated").textContent = fmtTime(state.lastUpdate);
+  $("#idx-meta").textContent = "as of " + fmtTime(state.lastUpdate);
+
+  state.loading = false;
+  $("#refresh").classList.remove("spinning");
+}
+
+/* refreshAll() used to bail out silently while a refresh was in flight, so a
+   tap on the refresh button during a slow load looked like a dead button. */
+async function requestRefresh() {
+  if (state.loading) return;
+  try { await refreshAll(); }
+  catch (e) {
+    console.error("refresh failed", e);
+    state.loading = false;
+    $("#refresh").classList.remove("spinning");
+  }
+}
+
+/* ---------- Tab/sub-tab switching ---------- */
+function switchTab(name) {
+  $$("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  $$("main > section").forEach(s => s.hidden = s.id !== "tab-" + name);
+}
+$("#tabs").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-tab]"); if (!btn) return;
+  switchTab(btn.dataset.tab);
+});
+$("#news-subtabs").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-sub]"); if (!btn) return;
+  $$("#news-subtabs button").forEach(b => b.classList.toggle("active", b === btn));
+  $$("#tab-news .sub-pane").forEach(p => p.hidden = p.id !== "news-" + btn.dataset.sub);
+});
+$("#refresh").addEventListener("click", requestRefresh);
+
+/* Calendar filter — these two buttons existed in the markup but were never
+   wired up (and "All" had its class baked into the id attribute by mistake). */
+function setCalFilter(mode) {
+  state.calFilter = mode;
+  $("#cal-all").classList.toggle("active", mode === "all");
+  $("#cal-only-watch").classList.toggle("active", mode === "watch");
+  renderCalendar();
+}
+$("#cal-all").addEventListener("click", () => setCalFilter("all"));
+$("#cal-only-watch").addEventListener("click", () => setCalFilter("watch"));
+$("#reddit-manage").addEventListener("click", () => openSettings());
+
+/* ---------- Edit toggles ---------- */
+$("#heatmap-edit").addEventListener("click", () => {
+  const editing = document.body.classList.toggle("editing-heatmap");
+  $("#heatmap-edit").classList.toggle("active", editing);
+  $("#heatmap-edit").textContent = editing ? "Done" : "Edit";
+});
+$("#watch-edit").addEventListener("click", () => {
+  const editing = document.body.classList.toggle("editing-watchlist");
+  $("#watch-edit").classList.toggle("active", editing);
+  $("#watch-edit").textContent = editing ? "Done" : "Edit";
+});
+$("#watch-add-group").addEventListener("click", () => window.addGroup());
+
+/* ---------- Research ---------- */
+$("#research-go").addEventListener("click", () => runResearch($("#research-input").value));
+$("#research-input").addEventListener("keydown", (e) => { if (e.key === "Enter") runResearch(e.target.value); });
+
+/* ---------- Settings modal ---------- */
+function openSettings() {
+  $("#set-finnhub").value = CONFIG.FINNHUB_API_KEY || "";
+  $("#set-fred").value = CONFIG.FRED_API_KEY || "";
+  $("#set-relay").value = CONFIG.CORS_RELAY || "";
+  $("#set-subs").value = CONFIG.SUBREDDITS || "";
+  $("#set-interval").value = CONFIG.AUTO_REFRESH_SECONDS;
+  renderHealth();
+  $("#settings-modal").hidden = false;
+}
+function closeSettings() { $("#settings-modal").hidden = true; }
+$("#settings-open").addEventListener("click", openSettings);
+$("#settings-close").addEventListener("click", closeSettings);
+$("#settings-modal").addEventListener("click", (e) => { if (e.target.id === "settings-modal") closeSettings(); });
+$("#settings-save").addEventListener("click", () => {
+  CONFIG = {
+    FINNHUB_API_KEY: $("#set-finnhub").value.trim(),
+    FRED_API_KEY: $("#set-fred").value.trim(),
+    CORS_RELAY: $("#set-relay").value.trim(),
+    SUBREDDITS: $("#set-subs").value.trim(),
+    AUTO_REFRESH_SECONDS: Math.max(60, parseInt($("#set-interval").value) || 120),
+  };
+  saveConfig(CONFIG);
+  quoteCache.clear();
+  closeSettings();
+  requestRefresh();
+  resetAutoRefresh();
+});
+$("#settings-reset").addEventListener("click", () => {
+  if (!confirm("Reset all settings (keeps API keys)?")) return;
+  CONFIG = { ...DEFAULTS, FINNHUB_API_KEY: CONFIG.FINNHUB_API_KEY, FRED_API_KEY: CONFIG.FRED_API_KEY, CORS_RELAY: CONFIG.CORS_RELAY };
+  saveConfig(CONFIG);
+  heatmap = DEFAULT_HEATMAP; saveHeatmap(heatmap);
+  watchlists = DEFAULT_WATCHLISTS; saveWatchlists(watchlists);
+  closeSettings(); location.reload();
+});
+
+/* ---------- Auto-refresh ---------- */
+let refreshTimer = null;
+function resetAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (!document.hidden) requestRefresh();
+  }, CONFIG.AUTO_REFRESH_SECONDS * 1000);
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.lastUpdate && (Date.now() - state.lastUpdate.getTime()) > 60000) {
+    requestRefresh();
+  }
+});
+
+/* ---------- Boot ---------- */
+renderHealth();
+renderKeyBanner();
+renderIndexes(); renderHeatmap(); renderMacro();
+renderWatchlists(); renderHeadlines(); renderReddit(); renderPolymarket(); renderCalendar();
+requestRefresh();
+resetAutoRefresh();
+
+// open settings on first run if no key set
+if (!CONFIG.FINNHUB_API_KEY) setTimeout(openSettings, 400);
+</script>
+</body>
+</html>

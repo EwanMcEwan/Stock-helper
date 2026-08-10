@@ -1,0 +1,50 @@
+name: Refresh market data snapshots
+
+# Rebuilds data/macro.json and data/reddit.json, which the app loads
+# same-origin. FRED and Reddit both refuse direct browser calls, so the
+# fetching has to happen server-side.
+
+on:
+  schedule:
+    # Every 30 minutes. FRED updates daily, Reddit continuously.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/fetch-data.mjs"
+      - ".github/workflows/refresh-data.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build snapshots
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: node scripts/fetch-data.mjs
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "No change in snapshots."
+          else
+            git commit -m "chore: refresh market data snapshots"
+            git push
+          fi
